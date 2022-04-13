@@ -1,0 +1,9 @@
+spring:
+  main:
+    banner-mode: console
+  profiles:
+    active: async
+app:
+  maxCSVContentLines: 1000
+logging:
+  config: config/logback_config.xml
