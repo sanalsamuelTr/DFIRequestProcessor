@@ -1,6 +1,7 @@
 package com.tr.drp.config;
 
 import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.SocketFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.integration.file.remote.session.CachingSessionFactory
 import org.springframework.integration.file.remote.session.SessionFactory;
 import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
 import org.springframework.integration.sftp.outbound.SftpMessageHandler;
+import org.springframework.integration.sftp.session.DefaultSftpSessionFactory;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.RetryPolicy;
@@ -24,6 +26,11 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Collections;
 
 @Configuration
@@ -35,6 +42,49 @@ public class SFTPConfig {
 
     @Autowired
     private SFTPProperties ftpProperties;
+
+    @Bean
+    public SessionFactory<ChannelSftp.LsEntry> sftpSessionFactory() {
+        log.info("## SFTP session factory initialization ###");
+        DefaultSftpSessionFactory factory = new DefaultSftpSessionFactory(true);
+        factory.setHost(ftpProperties.getUrl());
+        factory.setPort(ftpProperties.getPort());
+        factory.setUser(ftpProperties.getUsername());
+        factory.setPassword(ftpProperties.getPassword());
+        factory.setAllowUnknownKeys(true);
+        factory.setSocketFactory(new ConfSocketFactory(10_000));
+
+        CachingSessionFactory cachingSessionFactory= new CachingSessionFactory<>(factory, 20);
+
+        log.info("## SFTP session factory created ###");
+
+        return cachingSessionFactory;
+    }
+
+    private class ConfSocketFactory implements SocketFactory {
+        private int soTimeout = 0;
+
+        public ConfSocketFactory(int soTimeout) {
+            this.soTimeout = soTimeout;
+        }
+
+        @Override
+        public Socket createSocket(String s, int i) throws IOException, UnknownHostException {
+            Socket socket = new Socket(s, i);
+            socket.setSoTimeout(soTimeout);
+            return socket;
+        }
+
+        @Override
+        public InputStream getInputStream(Socket socket) throws IOException {
+            return socket.getInputStream();
+        }
+
+        @Override
+        public OutputStream getOutputStream(Socket socket) throws IOException {
+            return socket.getOutputStream();
+        }
+    }
 
 
 

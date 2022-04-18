@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface LocalFilesService {
     List<Path> splitCSV(Path csv, int maxContentLines);
-
+    Path newOutboundCSV();
 }

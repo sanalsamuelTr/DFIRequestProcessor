@@ -1,0 +1,19 @@
+spring:
+  main:
+    banner-mode: console
+  profiles:
+    active: async
+  datasource:
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://localhost\MSSQLSERVER:1433;database=sbxaud
+    username: sa
+    password: sqlserver
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
+app:
+  maxCSVContentLines: 1000
+logging:
+  config: config/logback_config.xml

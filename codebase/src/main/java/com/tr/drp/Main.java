@@ -4,6 +4,10 @@ import com.tr.drp.common.model.DFIRequest;
 import com.tr.drp.service.dfi.DFIService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -24,6 +28,12 @@ public class Main implements CommandLineRunner {
     private AbstractEnvironment env;
 
     @Autowired
+    private JobLauncher jobLauncher;
+
+    @Autowired
+    private Job inboundJob;
+
+    @Autowired
     private DFIService dfiService;
 
     public static void main(String... args) {
@@ -36,11 +46,8 @@ public class Main implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         log.info("RUN");
-        dfiService.processRequest(DFIRequest.builder()
-                .csvFile(Paths.get("/abc"))
-                .id("0x5")
-                .propertiesFile(Paths.get("/p"))
-                .build());
+        JobParameters jobParameters = new JobParametersBuilder().toJobParameters();
+        jobLauncher.run(inboundJob, jobParameters);
     }
 
     @PostConstruct

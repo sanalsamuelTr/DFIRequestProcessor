@@ -3,7 +3,28 @@ spring:
     banner-mode: console
   profiles:
     active: async
+  datasource:
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://192.168.56.1\MSSQLSERVER:1433;database=sbxaud;encrypt=true;trustServerCertificate=true;
+    username: sa
+    password: sqlserver
+
+
 app:
   maxCSVContentLines: 1000
+  sftp:
+    host: gcc-uat.hostedtax.thomsonreuters.com
+    port: 2222
+    username: ofv-uat.gcc-uat
+    password: siTr8itrtabfejKahkLv5F4mDsnwABx3
+    directory:
+      root: /storage/vatreturn/
+      outbound: input
+      inbound: output
+
+encryptor:
+  common:
+    pwd: ONESOURCEFVAT
+
 logging:
   config: config/logback_config.xml

@@ -21,7 +21,7 @@ public class DFIServiceImpl implements DFIService {
 
     private LocalFilesService localFilesService;
 
-    @Value("app.maxCSVContentLines")
+    @Value("${app.maxCSVContentLines}")
     private int maxCSVContentLines;
 
     public DFIServiceImpl(@Autowired LocalFilesService localFilesService) {

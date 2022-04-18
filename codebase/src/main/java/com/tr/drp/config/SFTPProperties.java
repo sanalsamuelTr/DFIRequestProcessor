@@ -12,41 +12,18 @@ import java.io.File;
 @Getter
 @Setter
 public class SFTPProperties {
-    @Value("${sftp.host}")
+    @Value("${app.sftp.host}")
     private String url;
-    @Value("${sftp.port}")
+    @Value("${app.sftp.port}")
     private Integer port;
-    @Value("${sftp.username}")
+    @Value("${app.sftp.username}")
     private String username;
-    @Value("#{principalCryptor.decrypt('${sftp.password}')}")
+    @Value("#{principalCryptor.decrypt('${app.sftp.password}')}")
     private String password;
 
-    @Value("${sftp.proxy.type}")
-    private String proxyType;
-    @Value("${sftp.proxy.host}")
-    private String proxyHost;
-    @Value("${sftp.proxy.port}")
-    private Integer proxyPort;
-    @Value("${sftp.proxy.username}")
-    private String proxyUsername;
-    @Value("${sftp.proxy.password}'}")
-    private String proxyPassword;
-
-    @Value("${sftp.directory.inbound.remote}")
+    @Value("${app.sftp.directory.inbound}")
     private String remoteInboundDirectory;
 
-    @Value("${sftp.directory.outbound.remote}")
+    @Value("${app.sftp.directory.outbound}")
     private String remoteOutboundDirectory;
-
-    //    @Value("${sftp.directory.local}")
-    private String localDirectory = File.separator + "storage" + File.separator + "vatreturn";
-
-    public JschProxyFactoryBean.Type getProxyEnumType() {
-        switch (getProxyType()) {
-            case "http" : return JschProxyFactoryBean.Type.HTTP;
-            case "socks4" : return JschProxyFactoryBean.Type.SOCKS4;
-            case "socks5" : return JschProxyFactoryBean.Type.SOCKS5;
-        }
-        return null;
-    }
 }
