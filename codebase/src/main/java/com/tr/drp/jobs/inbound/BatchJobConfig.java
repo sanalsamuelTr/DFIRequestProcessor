@@ -1,7 +1,10 @@
 package com.tr.drp.jobs.inbound;
 
+import com.tr.drp.service.dfi.DFIScenarioHelper;
 import com.tr.drp.service.file.LocalFilesService;
 import com.tr.drp.service.map.MappingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
@@ -40,6 +43,8 @@ import java.util.stream.Collectors;
 
 @Configuration
 public class BatchJobConfig {
+    private static final Logger log = LoggerFactory.getLogger(BatchJobConfig.class);
+
     @Value("file:config/input.sql")
     private Resource extractSQLResource;
 
@@ -59,6 +64,9 @@ public class BatchJobConfig {
 
     @Autowired
     private MappingService mappingService;
+
+    @Autowired
+    private DFIScenarioHelper dfiScenarioHelper;
 
     @Bean(name = "inboundJob")
     public Job inboundJob(@Qualifier("jdbcToCSVExtractData") Step jdbcToCSVExtractData) {
@@ -81,8 +89,7 @@ public class BatchJobConfig {
     public JdbcCursorItemReader<Map<String, String>> jdbcReader(@Value("#{stepExecution}") final StepExecution stepExecution) throws IOException {
         final JdbcCursorItemReader<Map<String, String>> reader = new JdbcCursorItemReader<Map<String, String>>();
         String sql = new String(Files.readAllBytes(extractSQLResource.getFile().toPath()));
-
-        System.out.println("SQl QUERY:::" + sql);
+        log.info("Sql: {}", sql);
         reader.setSql(sql);
 
         reader.setDataSource(dataSource);
@@ -96,27 +103,30 @@ public class BatchJobConfig {
     @StepScope
     public ItemWriter<Map<String, String>> csvWriter(@Value("#{stepExecution}") final StepExecution stepExecution) {
         ExecutionContext executionContext = stepExecution.getJobExecution().getExecutionContext();
+        String domain = stepExecution.getJobExecution().getJobParameters().getString("domain");
         Path outCSV = localFilesService.newOutboundCSV();
         FlatFileItemWriter<Map<String, String>> csvFileWriter = new FlatFileItemWriter<>();
         csvFileWriter.setResource(new FileSystemResource(outCSV));
-        csvFileWriter.setHeaderCallback(new ExtractStepCsvHeaderCallBack());
+        csvFileWriter.setHeaderCallback(new ExtractStepCsvHeaderCallBack(
+                dfiScenarioHelper.getDFIScenario(domain)
+                        .getRequestFields().stream().map(f -> f.getFieldName()).collect(Collectors.toList())));
         csvFileWriter.setShouldDeleteIfExists(true);
-        LineAggregator<Map<String, String>> lineAggregator = createLineAggregator();
+        LineAggregator<Map<String, String>> lineAggregator = createLineAggregator(domain);
         csvFileWriter.setLineAggregator(lineAggregator);
         csvFileWriter.open(executionContext);
         return csvFileWriter;
     }
 
-    private LineAggregator<Map<String, String>> createLineAggregator() {
+    private LineAggregator<Map<String, String>> createLineAggregator(String domain) {
         DelimitedLineAggregator<Map<String, String>> lineAggregator = new DelimitedLineAggregator<>();
-        FieldExtractor<Map<String, String>> fieldExtractor = createFieldExtractor();
+        FieldExtractor<Map<String, String>> fieldExtractor = createFieldExtractor(domain);
         lineAggregator.setFieldExtractor(fieldExtractor);
         return lineAggregator;
     }
 
-    private FieldExtractor<Map<String, String>> createFieldExtractor() {
-        MapFieldExtractor extractor = new MapFieldExtractor(mappingService.getDFIMap("0").stream()
-                .map(i -> i.getDbQueryResponseColumn()).collect(Collectors.toList()));
+    private FieldExtractor<Map<String, String>> createFieldExtractor(String domain) {
+        MapFieldExtractor extractor = new MapFieldExtractor(dfiScenarioHelper.getDFIScenario(domain)
+                .getRequestFields().stream().map(f -> f.getMapExpression()).collect(Collectors.toList()));
         return extractor;
     }
 
@@ -140,10 +150,15 @@ public class BatchJobConfig {
     }
 
     public class ExtractStepCsvHeaderCallBack implements FlatFileHeaderCallback {
+        private List<String> headers;
+
+        public ExtractStepCsvHeaderCallBack(List<String> headers) {
+            this.headers = headers;
+        }
 
         @Override
         public void writeHeader(Writer writer) throws IOException {
-            writer.write(mappingService.getDFIMap("0").stream().map(i -> i.getDbQueryResponseColumn()).collect(Collectors.joining(",")));
+            writer.write(headers.stream().collect(Collectors.joining(",")));
         }
     }
 

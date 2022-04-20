@@ -15,5 +15,10 @@ spring:
       enabled: false
 app:
   maxCSVContentLines: 1000
+  path:
+    domain: config/domain
+  file:
+    dfi-properties: properties.xml
+    dfi-properties-map: map.properties
 logging:
   config: config/logback_config.xml

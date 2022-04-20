@@ -5,7 +5,7 @@ spring:
     active: async
   datasource:
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    url: jdbc:sqlserver://192.168.56.1\MSSQLSERVER:1433;database=sbxaud;encrypt=true;trustServerCertificate=true;
+    url: jdbc:sqlserver://192.168.56.1\MSSQLSERVER:1433;database=drp;encrypt=true;trustServerCertificate=true;
     username: sa
     password: sqlserver
 
@@ -21,6 +21,11 @@ app:
       root: /storage/vatreturn/
       outbound: input
       inbound: output
+  path:
+    domain: config/domain
+  file:
+    dfi-properties: properties.xml
+    dfi-properties-map: map.properties
 
 encryptor:
   common:

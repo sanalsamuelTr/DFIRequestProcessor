@@ -46,7 +46,9 @@ public class Main implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         log.info("RUN");
-        JobParameters jobParameters = new JobParametersBuilder().toJobParameters();
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addString("domain", "alj")
+                .toJobParameters();
         jobLauncher.run(inboundJob, jobParameters);
     }
 
