@@ -1,25 +1,23 @@
 package com.tr.drp.jobs.inbound;
 
+import com.tr.drp.jobs.NewJobTriggerTasklet;
 import com.tr.drp.service.dfi.DFIScenarioHelper;
 import com.tr.drp.service.file.LocalFilesService;
-import com.tr.drp.service.map.MappingService;
+import com.tr.drp.service.job.JobType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.file.FlatFileHeaderCallback;
 import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
 import org.springframework.batch.item.file.transform.FieldExtractor;
 import org.springframework.batch.item.file.transform.LineAggregator;
@@ -45,7 +43,7 @@ import java.util.stream.Collectors;
 public class BatchJobConfig {
     private static final Logger log = LoggerFactory.getLogger(BatchJobConfig.class);
 
-    @Value("file:config/input.sql")
+    @Value("file:config/domain/alj/input.sql")
     private Resource extractSQLResource;
 
 
@@ -63,15 +61,16 @@ public class BatchJobConfig {
     private LocalFilesService localFilesService;
 
     @Autowired
-    private MappingService mappingService;
-
-    @Autowired
     private DFIScenarioHelper dfiScenarioHelper;
 
     @Bean(name = "inboundJob")
-    public Job inboundJob(@Qualifier("jdbcToCSVExtractData") Step jdbcToCSVExtractData) {
+    public Job inboundJob(
+            @Qualifier("jdbcToCSVExtractData") Step jdbcToCSVExtractData,
+            @Qualifier("triggerDFIOut") Step triggerDFIOut
+            ) {
         return jobBuilderFactory.get("inboundJob")
                 .start(jdbcToCSVExtractData)
+                .next(triggerDFIOut)
                 .build();
     }
 
@@ -81,6 +80,13 @@ public class BatchJobConfig {
                 .chunk(10)
                 .reader(jdbcReader)
                 .writer(csvWriter)
+                .build();
+    }
+
+    @Bean
+    protected Step triggerDFIOut() {
+        return stepBuilderFactory.get("triggerDFIOut")
+                .tasklet(new NewJobTriggerTasklet(JobType.DFI_PUSH, localFilesService))
                 .build();
     }
 
@@ -104,7 +110,8 @@ public class BatchJobConfig {
     public ItemWriter<Map<String, String>> csvWriter(@Value("#{stepExecution}") final StepExecution stepExecution) {
         ExecutionContext executionContext = stepExecution.getJobExecution().getExecutionContext();
         String domain = stepExecution.getJobExecution().getJobParameters().getString("domain");
-        Path outCSV = localFilesService.newOutboundCSV();
+        String jobId = stepExecution.getJobExecution().getJobParameters().getString("jobId");
+        Path outCSV = localFilesService.newOutboundDFICSV(domain, jobId);
         FlatFileItemWriter<Map<String, String>> csvFileWriter = new FlatFileItemWriter<>();
         csvFileWriter.setResource(new FileSystemResource(outCSV));
         csvFileWriter.setHeaderCallback(new ExtractStepCsvHeaderCallBack(

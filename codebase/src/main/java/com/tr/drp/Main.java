@@ -2,9 +2,11 @@ package com.tr.drp;
 
 import com.tr.drp.common.model.DFIRequest;
 import com.tr.drp.service.dfi.DFIService;
+import com.tr.drp.service.job.JobBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -34,7 +36,7 @@ public class Main implements CommandLineRunner {
     private Job inboundJob;
 
     @Autowired
-    private DFIService dfiService;
+    private JobBuilder jobBuilder;
 
     public static void main(String... args) {
         log.info("STARTING APPLICATION");
@@ -48,6 +50,7 @@ public class Main implements CommandLineRunner {
         log.info("RUN");
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("domain", "alj")
+                .addString("jobId", jobBuilder.generateNewId())
                 .toJobParameters();
         jobLauncher.run(inboundJob, jobParameters);
     }

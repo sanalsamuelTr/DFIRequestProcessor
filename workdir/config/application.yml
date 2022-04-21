@@ -12,17 +12,20 @@ spring:
 
 app:
   maxCSVContentLines: 1000
+  jobid-pattern: yyyyMMddHHmmssSSS
   sftp:
     host: gcc-uat.hostedtax.thomsonreuters.com
     port: 2222
     username: ofv-uat.gcc-uat
     password: siTr8itrtabfejKahkLv5F4mDsnwABx3
     directory:
-      root: /storage/vatreturn/
       outbound: input
       inbound: output
   path:
+    config: config
     domain: config/domain
+    job: job
+    output: out
   file:
     dfi-properties: properties.xml
     dfi-properties-map: map.properties
