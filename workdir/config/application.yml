@@ -11,6 +11,12 @@ spring:
 
 
 app:
+  file-trigger:
+    check-period-sec: 60
+  domain:
+    -
+      name: alj
+      consumer-cron: 0 0 0 * *
   maxCSVContentLines: 1000
   jobid-pattern: yyyyMMddHHmmssSSS
   sftp:

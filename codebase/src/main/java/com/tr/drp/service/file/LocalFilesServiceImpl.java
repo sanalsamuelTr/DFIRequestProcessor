@@ -1,47 +1,46 @@
 package com.tr.drp.service.file;
 
 import com.tr.drp.common.exception.ProcessorException;
-import com.tr.drp.service.job.JobBuilder;
-import com.tr.drp.service.job.JobDescriptor;
-import org.apache.commons.io.FileUtils;
+import com.tr.drp.common.model.job.JobContext;
+import com.tr.drp.common.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class LocalFilesServiceImpl implements LocalFilesService {
 
+    private static final Logger log = LoggerFactory.getLogger(LocalFilesServiceImpl.class);
+    public static final String ERROR_FILE_SUFFIX = ".error";
+
+    @Value("${app.path.domain}")
     private String baseDomainPath;
+    @Value("${app.file.dfi-properties}")
     private String dfiPropertiesFileName;
+    @Value("${app.file.dfi-properties-map}")
     private String dfiPropertiesMapFileName;
+    @Value("${app.path.output}")
     private String outputBasePath;
+    @Value("${app.path.job}")
     private String jobTriggerPath;
 
-    public LocalFilesServiceImpl(
-            @Value("${app.path.domain}")
-            String baseDomainPath,
-            @Value("${app.file.dfi-properties}")
-            String dfiPropertiesFileName,
-            @Value("${app.file.dfi-properties-map}")
-            String dfiPropertiesMapFileName,
-            @Value("${app.path.output}")
-            String outputBasePath,
-            @Value("${app.path.job}")
-            String jobTriggerPath) {
-        this.baseDomainPath = baseDomainPath;
-        this.dfiPropertiesFileName = dfiPropertiesFileName;
-        this.dfiPropertiesMapFileName = dfiPropertiesMapFileName;
-        this.outputBasePath = outputBasePath;
-        this.jobTriggerPath = jobTriggerPath;
-    }
+    @Autowired
+    private JobContextHelper jobContextHelper;
+
+    private Set<String> triggerFilesBlackList = new HashSet<>();
 
     @Override
     public Path getDFIProperties(String domain) {
@@ -60,23 +59,68 @@ public class LocalFilesServiceImpl implements LocalFilesService {
     }
 
     @Override
-    public Path newOutboundDFICSV(String domain, String id) {
-        return Paths.get(outputBasePath, domain, "dfi_out.csv");
+    public Path dbOutCSV(String domain, String id) {
+        return Paths.get(outputBasePath, domain, id, "db_out.csv");
     }
 
     @Override
-    public Path createJobTrigger(JobDescriptor jobDescriptor) {
-        Path path = Paths.get(jobTriggerPath, jobDescriptor.toJobTriggerFileName());
+    public Path createJobTrigger(JobContext jobContext) {
+        Path path = Paths.get(jobTriggerPath, jobContextHelper.getJobTriggerFileName(jobContext));
         createFile(path);
         return path;
     }
+    @Override
+    public List<JobContext> getJobContextsFromTriggerFiles() {
+        try {
+            Set<String> allFilesNames = Files.list(Paths.get(jobTriggerPath))
+                    .filter(f -> !Files.isDirectory(f))
+                    .map(f -> f.getFileName().toString())
+                    .collect(Collectors.toSet());
+            Set<String> errorFiles = allFilesNames.stream().filter(f -> f.endsWith(ERROR_FILE_SUFFIX))
+                    .map(f -> StringUtils.remSuffix(f, ERROR_FILE_SUFFIX)).collect(Collectors.toSet());
+            return allFilesNames.stream()
+                    .filter(jobContextHelper::isTriggerFileName)
+                    .filter(f -> !triggerFilesBlackList.contains(f))
+                    .filter(f -> !errorFiles.contains(f))
+                    .map(f -> jobContextHelper.fromFileName(f))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new ProcessorException("Fail to list job triggers path: " + jobTriggerPath, e);
+        }
+    }
+
+    @Override
+    public void removeJobTrigger(JobContext jobContext) {
+        Path path = Paths.get(jobTriggerPath, jobContextHelper.getJobTriggerFileName(jobContext));
+        log.info("Removing job trigger: {}", path);
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            log.error("Can't delete trigger file, which will be blacklisted for this app run: {}", path);
+            triggerFilesBlackList.add(path.getFileName().toString());
+        }
+    }
+
+    @Override
+    public void createJobTriggerErrorFile(JobContext jobContext) {
+        String fileName = jobContextHelper.getJobTriggerFileName(jobContext) + ERROR_FILE_SUFFIX;
+        Path filePath = Paths.get(jobTriggerPath, fileName);
+        try {
+
+            createFile(filePath);
+        } catch (ProcessorException e) {
+            log.error("Can't create job trigger error file: {}", filePath);
+        }
+    }
+
+
 
     private void createFile(Path file) {
         try {
             Files.createDirectories(file.getParent());
             Files.createFile(file);
         } catch (IOException e) {
-            throw new ProcessorException("File createion: " + file, e);
+            throw new ProcessorException("File creation: " + file, e);
         }
     }
 }

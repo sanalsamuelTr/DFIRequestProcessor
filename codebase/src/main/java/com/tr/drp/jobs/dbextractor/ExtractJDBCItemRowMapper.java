@@ -1,4 +1,4 @@
-package com.tr.drp.jobs.inbound;
+package com.tr.drp.jobs.dbextractor;
 
 import org.springframework.jdbc.core.RowMapper;
 

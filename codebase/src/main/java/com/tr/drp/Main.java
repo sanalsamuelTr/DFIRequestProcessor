@@ -1,12 +1,9 @@
 package com.tr.drp;
 
-import com.tr.drp.common.model.DFIRequest;
-import com.tr.drp.service.dfi.DFIService;
-import com.tr.drp.service.job.JobBuilder;
+import com.tr.drp.service.file.JobContextHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -18,7 +15,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.AbstractEnvironment;
 
 import javax.annotation.PostConstruct;
-import java.nio.file.Paths;
 
 @SpringBootApplication
 public class Main implements CommandLineRunner {
@@ -36,13 +32,13 @@ public class Main implements CommandLineRunner {
     private Job inboundJob;
 
     @Autowired
-    private JobBuilder jobBuilder;
+    private JobContextHelper jobContextHelper;
 
     public static void main(String... args) {
         log.info("STARTING APPLICATION");
         applicationContext = SpringApplication.run(Main.class, args);
-        log.info("APPLICATION FINISHED");
-        applicationContext.close();
+//        log.info("APPLICATION FINISHED");
+//        applicationContext.close();
     }
 
     @Override
@@ -50,7 +46,7 @@ public class Main implements CommandLineRunner {
         log.info("RUN");
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("domain", "alj")
-                .addString("jobId", jobBuilder.generateNewId())
+                .addString("jobId", jobContextHelper.generateNewId())
                 .toJobParameters();
         jobLauncher.run(inboundJob, jobParameters);
     }
@@ -58,5 +54,9 @@ public class Main implements CommandLineRunner {
     @PostConstruct
     public void init() {
         env.setIgnoreUnresolvableNestedPlaceholders(true);
+    }
+
+    public static ConfigurableApplicationContext getApplicationContext() {
+        return applicationContext;
     }
 }

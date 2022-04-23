@@ -1,9 +1,9 @@
-package com.tr.drp.jobs.inbound;
+package com.tr.drp.jobs.dbextractor;
 
 import com.tr.drp.jobs.NewJobTriggerTasklet;
 import com.tr.drp.service.dfi.DFIScenarioHelper;
 import com.tr.drp.service.file.LocalFilesService;
-import com.tr.drp.service.job.JobType;
+import com.tr.drp.common.model.job.JobType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -40,8 +40,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Configuration
-public class BatchJobConfig {
-    private static final Logger log = LoggerFactory.getLogger(BatchJobConfig.class);
+public class DBExtractorJobConfig {
+    private static final Logger log = LoggerFactory.getLogger(DBExtractorJobConfig.class);
 
     @Value("file:config/domain/alj/input.sql")
     private Resource extractSQLResource;
@@ -97,7 +97,6 @@ public class BatchJobConfig {
         String sql = new String(Files.readAllBytes(extractSQLResource.getFile().toPath()));
         log.info("Sql: {}", sql);
         reader.setSql(sql);
-
         reader.setDataSource(dataSource);
 
         reader.setFetchSize(1000);
@@ -111,7 +110,7 @@ public class BatchJobConfig {
         ExecutionContext executionContext = stepExecution.getJobExecution().getExecutionContext();
         String domain = stepExecution.getJobExecution().getJobParameters().getString("domain");
         String jobId = stepExecution.getJobExecution().getJobParameters().getString("jobId");
-        Path outCSV = localFilesService.newOutboundDFICSV(domain, jobId);
+        Path outCSV = localFilesService.dbOutCSV(domain, jobId);
         FlatFileItemWriter<Map<String, String>> csvFileWriter = new FlatFileItemWriter<>();
         csvFileWriter.setResource(new FileSystemResource(outCSV));
         csvFileWriter.setHeaderCallback(new ExtractStepCsvHeaderCallBack(

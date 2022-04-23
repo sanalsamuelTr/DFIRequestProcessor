@@ -1,10 +1,11 @@
-package com.tr.drp.service.job;
+package com.tr.drp.common.model.job;
 
+import com.tr.drp.common.exception.ProcessorException;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum  JobType {
-    DB_LOAD("db_load"), DFI_PUSH("dfi_push"), DFI_PULL("dfi_pull");
+    DB_LOAD("db-load"), DFI_PUSH("dfi-push"), DFI_PULL("dfi-pull");
     private String name;
 
     public String getName() {
@@ -17,6 +18,6 @@ public enum  JobType {
                 return type;
             }
         }
-        return null;
+        throw new ProcessorException("Unknown job type: " + name);
     }
 }
