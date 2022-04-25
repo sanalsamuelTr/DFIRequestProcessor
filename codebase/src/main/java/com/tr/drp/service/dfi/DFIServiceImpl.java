@@ -1,18 +1,14 @@
 package com.tr.drp.service.dfi;
 
 import com.tr.drp.common.model.DFIRequest;
-import com.tr.drp.common.model.DFIResponse;
+import com.tr.drp.config.SFTPConfig;
 import com.tr.drp.service.file.LocalFilesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
-import java.util.List;
-import java.util.concurrent.Future;
 
 @Service
 public class DFIServiceImpl implements DFIService {
@@ -21,19 +17,36 @@ public class DFIServiceImpl implements DFIService {
 
     private LocalFilesService localFilesService;
 
-    @Value("${app.maxCSVContentLines}")
-    private int maxCSVContentLines;
+    private final SFTPConfig.SFTPGateway sftpGateway;
 
-    public DFIServiceImpl(@Autowired LocalFilesService localFilesService) {
+
+    public DFIServiceImpl(
+            @Autowired LocalFilesService localFilesService,
+            @Autowired SFTPConfig.SFTPGateway sftpGateway
+    ) {
         this.localFilesService = localFilesService;
+        this.sftpGateway = sftpGateway;
     }
 
     @Override
-    @Async
-    public Future<DFIResponse> processRequest(DFIRequest dfiRequest) {
+    public void sendRequest(DFIRequest dfiRequest) {
         log.info("Process Request: {}", dfiRequest);
-        List<Path> csvs = localFilesService.splitCSV(dfiRequest.getCsvFile(), maxCSVContentLines);
+        sendTargetCSV(dfiRequest);
+        sendPropertyFile(dfiRequest);
+        sendTriggerFile(dfiRequest);
+    }
 
-        return null;
+
+    private void sendPropertyFile(DFIRequest dfiRequest) {
+        Path propertiesPath = localFilesService.getDFIProperties(dfiRequest.getJobContext().getDomain());
+        sftpGateway.sendToSftp(propertiesPath.toFile(), dfiRequest.getDfiRequestId() + ".properties");
+    }
+
+    private void sendTargetCSV(DFIRequest dfiRequest) {
+        sftpGateway.sendToSftp(dfiRequest.getCsvFile().toFile(), dfiRequest.getDfiRequestId() + ".csv");
+    }
+
+    private void sendTriggerFile(DFIRequest dfiRequest) {
+        sftpGateway.sendToSftp(new byte[]{}, dfiRequest.getDfiRequestId() + ".trg");
     }
 }

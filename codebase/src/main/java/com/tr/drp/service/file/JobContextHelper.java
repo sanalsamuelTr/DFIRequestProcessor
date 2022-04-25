@@ -5,13 +5,9 @@ import com.tr.drp.common.model.job.JobContext;
 import com.tr.drp.common.model.job.JobType;
 import com.tr.drp.jobs.JobIdFormat;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -21,6 +17,7 @@ public class JobContextHelper {
     @Autowired
     private JobIdFormat jobIdFormat;
     private final Pattern fileNamePattern;
+
     public JobContextHelper() {
         String jobTypesEnumeration = Arrays.stream(JobType.values()).map(e -> e.getName())
                 .collect(Collectors.joining("|"));

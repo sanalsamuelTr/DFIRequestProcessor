@@ -1,9 +1,9 @@
 package com.tr.drp.jobs.dbextractor;
 
+import com.tr.drp.common.model.job.JobType;
 import com.tr.drp.jobs.NewJobTriggerTasklet;
 import com.tr.drp.service.dfi.DFIScenarioHelper;
 import com.tr.drp.service.file.LocalFilesService;
-import com.tr.drp.common.model.job.JobType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -67,7 +67,7 @@ public class DBExtractorJobConfig {
     public Job inboundJob(
             @Qualifier("jdbcToCSVExtractData") Step jdbcToCSVExtractData,
             @Qualifier("triggerDFIOut") Step triggerDFIOut
-            ) {
+    ) {
         return jobBuilderFactory.get("inboundJob")
                 .start(jdbcToCSVExtractData)
                 .next(triggerDFIOut)

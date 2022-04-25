@@ -3,6 +3,7 @@ package com.tr.drp.jobs;
 import com.tr.drp.common.exception.ProcessorException;
 import com.tr.drp.common.model.job.JobContext;
 import com.tr.drp.common.model.job.JobType;
+import com.tr.drp.jobs.dfiinbound.DFIInboundJobRunner;
 import com.tr.drp.jobs.dfioutbound.DFIOutboundJobRunner;
 import com.tr.drp.service.file.LocalFilesService;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,51 +25,64 @@ public class FileTriggerJobScheduler {
     DFIOutboundJobRunner dfiOutboundJobRunner;
 
     @Autowired
+    DFIInboundJobRunner dfiInboundJobRunner;
+
+    @Autowired
     private LocalFilesService localFilesService;
 
     @Scheduled(initialDelay = 5000, fixedDelayString = "#{${app.file-trigger.check-period-sec} * 1000}")
     public void trigger() {
         int completed = 0;
-        while((completed = run()) != 0) {
+        while ((completed = run()) != 0) {
             pause();
             log.info("Auto reschedule immediately jobs run after {} jobs success completed.", completed);
         }
     }
+
     private void pause() {
         try {
             Thread.sleep(1000);
-        } catch (InterruptedException e) {}
+        } catch (InterruptedException e) {
+        }
     }
 
     private int run() {
         List<JobContext> jobContexts = localFilesService.getJobContextsFromTriggerFiles();
         log.info("JobsToProcess: {}", jobContexts);
-        List<JobContext> errorJobContexts = jobContexts.stream()
-                .filter(j -> !runJob(j))
+        List<JobContext> errorJobContexts = new ArrayList<>();
+        List<JobContext> endedJobs = jobContexts.stream()
+                .filter(j -> runJob(j, errorJobContexts))
                 .collect(Collectors.toList());
         if (!errorJobContexts.isEmpty()) {
             log.error("ERROR jobs: {}", errorJobContexts);
         }
-        return jobContexts.size() - errorJobContexts.size();
+        return endedJobs.size();
     }
 
-    private boolean runJob(JobContext jobContext) {
+    private boolean runJob(JobContext jobContext, List<JobContext> errorJobContexts) {
         try {
             log.info("Process job: {}", jobContext);
             JobRunner jobRunner = getJobRunner(jobContext.getJobType());
-            jobRunner.run(jobContext);
-            localFilesService.removeJobTrigger(jobContext);
+            if (jobRunner.run(jobContext)) {
+                localFilesService.removeJobTrigger(jobContext);
+                return true;
+            }
         } catch (ProcessorException e) {
-            log.error("Fail to process job: {}", jobContext);
+            log.error("Fail to process job: {}", jobContext, e);
             localFilesService.createJobTriggerErrorFile(jobContext);
-            return false;
+            errorJobContexts.add(jobContext);
         }
-        return true;
+        return false;
     }
+
     private JobRunner getJobRunner(JobType jobType) {
         switch (jobType) {
-            case DFI_PUSH: return dfiOutboundJobRunner;
-            default: throw new ProcessorException("Unsupported job type: " + jobType);
+            case DFI_PUSH:
+                return dfiOutboundJobRunner;
+            case DFI_PULL:
+                return dfiInboundJobRunner;
+            default:
+                throw new ProcessorException("Unsupported job type: " + jobType);
         }
     }
 }

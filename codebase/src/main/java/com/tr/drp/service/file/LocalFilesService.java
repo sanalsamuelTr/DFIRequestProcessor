@@ -1,5 +1,6 @@
 package com.tr.drp.service.file;
 
+import com.tr.drp.common.model.DFIRequest;
 import com.tr.drp.common.model.job.JobContext;
 
 import java.nio.file.Path;
@@ -7,9 +8,17 @@ import java.util.List;
 
 public interface LocalFilesService {
     Path getDFIProperties(String domain);
+
     Path getDFIPropertiesMap(String domain);
-    List<Path> splitCSV(Path csv, int maxContentLines);
+
+    List<DFIRequest> getDFIRequests(JobContext jobContext);
+
+    boolean checkDFIOutExist(JobContext jobContext);
+
+    List<Path> splitToDFIOutCSV(JobContext jobContext, int maxContentLines);
+
     Path dbOutCSV(String domain, String id);
+
     Path createJobTrigger(JobContext jobContext);
 
     List<JobContext> getJobContextsFromTriggerFiles();
@@ -17,4 +26,8 @@ public interface LocalFilesService {
     void removeJobTrigger(JobContext jobContext);
 
     void createJobTriggerErrorFile(JobContext jobContext);
+
+    void writeDFIOutPart(DFIRequest request, byte[] zip);
+
+    void collectDFIOutCSVs(List<DFIRequest> requests);
 }

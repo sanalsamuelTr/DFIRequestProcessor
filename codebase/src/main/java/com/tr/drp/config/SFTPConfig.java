@@ -13,11 +13,13 @@ import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.config.EnableIntegration;
+import org.springframework.integration.file.remote.RemoteFileTemplate;
 import org.springframework.integration.file.remote.session.CachingSessionFactory;
 import org.springframework.integration.file.remote.session.SessionFactory;
 import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
 import org.springframework.integration.sftp.outbound.SftpMessageHandler;
 import org.springframework.integration.sftp.session.DefaultSftpSessionFactory;
+import org.springframework.integration.sftp.session.SftpRemoteFileTemplate;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.RetryPolicy;
@@ -54,11 +56,16 @@ public class SFTPConfig {
         factory.setAllowUnknownKeys(true);
         factory.setSocketFactory(new ConfSocketFactory(10_000));
 
-        CachingSessionFactory cachingSessionFactory= new CachingSessionFactory<>(factory, 20);
+        CachingSessionFactory cachingSessionFactory = new CachingSessionFactory<>(factory, 20);
 
         log.info("## SFTP session factory created ###");
 
         return cachingSessionFactory;
+    }
+
+    @Bean
+    public RemoteFileTemplate<ChannelSftp.LsEntry> remoteFileTemplate(@Autowired SessionFactory<ChannelSftp.LsEntry> sessionFactory) {
+        return new SftpRemoteFileTemplate(sessionFactory);
     }
 
     private class ConfSocketFactory implements SocketFactory {
@@ -87,25 +94,22 @@ public class SFTPConfig {
     }
 
 
-
-
-
     @Bean(name = "retryAdvice")
     public RequestHandlerRetryAdvice requestHandlerRetryAdvice(final SessionFactory<ChannelSftp.LsEntry> sftpSessionFactory) {
         RequestHandlerRetryAdvice requestHandlerRetryAdvice = new RequestHandlerRetryAdvice();
         RetryTemplate retryTemplate = new RetryTemplate();
         //setup retry rules as max attempt to process message, exceptions to be retried
         RetryPolicy retryPolicy =
-                new SimpleRetryPolicy(5, Collections.<Class<? extends Throwable>, Boolean> singletonMap(Exception.class, true));
+                new SimpleRetryPolicy(5, Collections.<Class<? extends Throwable>, Boolean>singletonMap(Exception.class, true));
         retryTemplate.setRetryPolicy(retryPolicy);
         // setup backoff policy which will be applied between failed attempts
         retryTemplate.setBackOffPolicy(new FixedBackOffPolicy());
         requestHandlerRetryAdvice.setRetryTemplate(retryTemplate);
         //setup recovery behavior after retry a fail
-        requestHandlerRetryAdvice.setRecoveryCallback(context ->  {
+        requestHandlerRetryAdvice.setRecoveryCallback(context -> {
             if (sftpSessionFactory instanceof CachingSessionFactory) {
                 log.info("recovery after fail, reset sessionFactory..");
-                ((CachingSessionFactory)sftpSessionFactory).resetCache();
+                ((CachingSessionFactory) sftpSessionFactory).resetCache();
             }
             return null;
         });
@@ -125,6 +129,7 @@ public class SFTPConfig {
     public interface SFTPGateway {
         @Gateway(requestChannel = "toSftpChannel")
         void sendToSftp(File file, @Header("targetFileName") String targetFileName);
+
         @Gateway(requestChannel = "toSftpChannel")
         void sendToSftp(byte[] file, @Header("targetFileName") String targetFileName);
     }

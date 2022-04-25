@@ -4,7 +4,7 @@ import com.tr.drp.common.exception.ProcessorException;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public enum  JobType {
+public enum JobType {
     DB_LOAD("db-load"), DFI_PUSH("dfi-push"), DFI_PULL("dfi-pull");
     private String name;
 

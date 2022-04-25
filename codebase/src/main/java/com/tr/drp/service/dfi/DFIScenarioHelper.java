@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Properties;
 
 @Component
@@ -28,7 +27,6 @@ public class DFIScenarioHelper {
     public DFIScenarioHelper(@Autowired LocalFilesService localFilesService) {
         this.localFilesService = localFilesService;
     }
-
 
 
     public DFIScenario getDFIScenario(String domain) {

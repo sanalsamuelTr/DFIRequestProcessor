@@ -11,32 +11,31 @@ import java.util.Map;
 
 /**
  * Class for mapping rows of ResultSet on a per-row basis.
- * 
- * @author Ramesh Sugunan
  *
+ * @author Ramesh Sugunan
  */
 public class ExtractJDBCItemRowMapper implements RowMapper<Map<String, String>> {
 
-	private static final int COUNTER_START_VALUE = 1;
+    private static final int COUNTER_START_VALUE = 1;
 
-	private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Map<String, String> mapRow(ResultSet result, int rowNum) throws SQLException {
-		Map<String, String> details = new HashMap<>();
-		ResultSetMetaData resultSetMetaData = result.getMetaData();
-		int numberOfCoulmns = resultSetMetaData.getColumnCount();
-		for (int index = COUNTER_START_VALUE; index <= numberOfCoulmns; index++) {
-			String coulmnName = resultSetMetaData.getColumnName(index);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, String> mapRow(ResultSet result, int rowNum) throws SQLException {
+        Map<String, String> details = new HashMap<>();
+        ResultSetMetaData resultSetMetaData = result.getMetaData();
+        int numberOfCoulmns = resultSetMetaData.getColumnCount();
+        for (int index = COUNTER_START_VALUE; index <= numberOfCoulmns; index++) {
+            String coulmnName = resultSetMetaData.getColumnName(index);
 
 
-			Object value = result.getObject(coulmnName);
+            Object value = result.getObject(coulmnName);
 
-			details.put(coulmnName, value == null ? null : value.toString());
-		}
-		return details;
-	}
+            details.put(coulmnName, value == null ? null : value.toString());
+        }
+        return details;
+    }
 }

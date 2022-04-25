@@ -1,8 +1,8 @@
 package com.tr.drp.jobs;
 
-import com.tr.drp.service.file.LocalFilesService;
 import com.tr.drp.common.model.job.JobContext;
 import com.tr.drp.common.model.job.JobType;
+import com.tr.drp.service.file.LocalFilesService;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;

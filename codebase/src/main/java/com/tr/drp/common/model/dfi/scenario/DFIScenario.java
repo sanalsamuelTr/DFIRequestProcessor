@@ -12,8 +12,8 @@ import java.util.List;
 @XmlRootElement(name = "Scenario")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DFIScenario {
-    @XmlElement(name="requestField")
+    @XmlElement(name = "requestField")
     private List<DFIField> requestFields;
-    @XmlElement(name="responseField")
+    @XmlElement(name = "responseField")
     private List<DFIField> responseFields;
 }

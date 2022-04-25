@@ -11,12 +11,12 @@ spring:
 
 
 app:
+  db-cron: 0 * * * * ?
   file-trigger:
-    check-period-sec: 60
+    check-period-sec: 30
   domain:
     -
       name: alj
-      consumer-cron: 0 0 0 * *
   maxCSVContentLines: 1000
   jobid-pattern: yyyyMMddHHmmssSSS
   sftp:
@@ -25,13 +25,17 @@ app:
     username: ofv-uat.gcc-uat
     password: siTr8itrtabfejKahkLv5F4mDsnwABx3
     directory:
-      outbound: input
+      outbound: /input
       inbound: output
   path:
     config: config
-    domain: config/domain
     job: job
     output: out
+    domain:
+      config: config/domain
+      job:
+        dfi-out: dfi_out
+        dfi-in: dfi_in
   file:
     dfi-properties: properties.xml
     dfi-properties-map: map.properties

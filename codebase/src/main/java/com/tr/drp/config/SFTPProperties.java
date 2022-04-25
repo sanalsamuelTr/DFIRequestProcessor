@@ -4,9 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.sftp.session.JschProxyFactoryBean;
-
-import java.io.File;
 
 @Configuration
 @Getter
