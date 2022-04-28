@@ -164,7 +164,7 @@ public class DBExtractorJobConfig {
 
         @Override
         public void writeHeader(Writer writer) throws IOException {
-            writer.write(headers.stream().collect(Collectors.joining(",")));
+            writer.write("#" + headers.stream().collect(Collectors.joining(",")));
         }
     }
 

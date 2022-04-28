@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,10 +16,9 @@ import java.util.Map;
  * @author Ramesh Sugunan
  */
 public class ExtractJDBCItemRowMapper implements RowMapper<Map<String, String>> {
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("MMddyyyy");
 
     private static final int COUNTER_START_VALUE = 1;
-
-    private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * {@inheritDoc}
@@ -33,8 +33,15 @@ public class ExtractJDBCItemRowMapper implements RowMapper<Map<String, String>> 
 
 
             Object value = result.getObject(coulmnName);
+            String sValue = null;
+            if (value != null) {
+                sValue = value.toString();
+                if (value != null && value instanceof Date) {
+                    sValue = dateFormat.format(value);
+                }
+            }
 
-            details.put(coulmnName, value == null ? null : value.toString());
+            details.put(coulmnName, sValue);
         }
         return details;
     }

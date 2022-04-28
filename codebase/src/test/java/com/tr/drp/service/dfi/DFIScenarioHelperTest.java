@@ -22,7 +22,10 @@ public class DFIScenarioHelperTest {
         DFIScenario dfiScenario = dfiScenarioHelper.getDFIScenario("alj");
         Collections.sort(dfiScenario.getRequestFields(), Comparator.comparing(DFIField::getPosition));
         for (DFIField f : dfiScenario.getRequestFields()) {
-            System.out.println(f.getFieldName() + "=" + f.getFieldName().substring(f.getFieldName().lastIndexOf(".") + 1));
+            String fName = f.getFieldName();
+            fName = fName.replace("TaxCalculationRequest.INDATA.", "");
+            fName = fName.replace(".", "_");
+            System.out.println(f.getFieldName() + "=" + fName);
         }
     }
 }

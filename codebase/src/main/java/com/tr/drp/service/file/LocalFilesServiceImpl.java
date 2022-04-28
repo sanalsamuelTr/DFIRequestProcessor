@@ -20,10 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -154,12 +151,17 @@ public class LocalFilesServiceImpl implements LocalFilesService {
     private List<List<String>> splitCSVLinesIntoParts(List<String> csvLines, int maxContentLines) {
         List<List<String>> parts;
         List<String> headLines = getCSVHeadLines(csvLines);
-        List<String> csvContentLines = csvLines.subList(headLines.size(), csvLines.size());
+        headLines.addAll(0, getServiceHeads());
+        List<String> csvContentLines = csvLines.stream().filter(l -> !isCSVHeadLine(l)).collect(Collectors.toList());
         parts = Lists.partition(csvContentLines, maxContentLines);
         for (List<String> part : parts) {
             part.addAll(0, headLines);
         }
         return parts;
+    }
+
+    private List<String> getServiceHeads() {
+        return Arrays.asList("#TaxCalculationService,CalculateTax");
     }
 
     private List<String> getCSVHeadLines(List<String> lines) {
