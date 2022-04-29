@@ -136,7 +136,7 @@ public class LocalFilesServiceImpl implements LocalFilesService {
                 Path partFilePath = getDFIOutPartPath(jobContext, p);
                 fileParts.add(partFilePath);
                 Files.deleteIfExists(partFilePath);
-                FileUtils.writeLines(partFilePath.toFile(), part);
+                FileUtils.writeLines(partFilePath.toFile(), "UTF-8", part, null);
             }
         } catch (IOException e) {
             throw new ProcessorException("Can't split dfi out for job: " + jobContext, e);
