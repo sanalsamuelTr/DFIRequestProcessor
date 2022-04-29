@@ -1,1 +1,1 @@
-select *,'ALJ' as INVOICE_VENDORNAME,'88877' as INVOICE_VENDORNUMBER, 'false' as INVOICE_ISAUDITED from TaxCalculationRequest;
+select * from TaxCalculationRequest;
