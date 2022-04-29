@@ -36,7 +36,10 @@ public class ExtractJDBCItemRowMapper implements RowMapper<Map<String, String>> 
             String sValue = null;
             if (value != null) {
                 sValue = value.toString();
-                if (value != null && value instanceof Date) {
+                if (value instanceof String) {
+                    sValue = '"'+sValue+'"';
+                }
+                if (value instanceof Date) {
                     sValue = dateFormat.format(value);
                 }
             }
