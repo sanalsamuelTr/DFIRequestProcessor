@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Scenario>
+<Scenario xmlns="http://www.thomsonreuters.com/ositax/integrations/datafileintegrator/model/v1_1">
     <schemaVersion>1.1</schemaVersion>
     <id>1</id>
     <scenarioName>ALJ_TAX_CALL_TEMPLATE_V1</scenarioName>
     <serviceName>TaxCalculationService</serviceName>
     <operationName>CalculateTax</operationName>
     <version>2011-09-01</version>
-    <userName>pradeep.putta@alj.tr</userName>
-    <password>Pradvini1$</password>
+    <userName>madhav</userName>
+    <password>Welcome1$</password>
     <applicationUrl>http://onesdevoitdapp:8080/sabrix/services</applicationUrl>
     <commentCharacter>#</commentCharacter>
     <headerLinesToSkip>0</headerLinesToSkip>
