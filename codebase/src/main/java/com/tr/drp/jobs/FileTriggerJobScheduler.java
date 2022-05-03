@@ -1,6 +1,7 @@
 package com.tr.drp.jobs;
 
 import com.tr.drp.common.exception.ProcessorException;
+import com.tr.drp.common.log.MultiJobLogContext;
 import com.tr.drp.common.model.job.JobContext;
 import com.tr.drp.common.model.job.JobType;
 import com.tr.drp.jobs.dfiinbound.DFIInboundJobRunner;
@@ -60,6 +61,7 @@ public class FileTriggerJobScheduler {
     }
 
     private boolean runJob(JobContext jobContext, List<JobContext> errorJobContexts) {
+        MultiJobLogContext.setJobContext(jobContext);
         try {
             log.info("Process job: {}", jobContext);
             JobRunner jobRunner = getJobRunner(jobContext.getJobType());
@@ -71,6 +73,8 @@ public class FileTriggerJobScheduler {
             log.error("Fail to process job: {}", jobContext, e);
             localFilesService.createJobTriggerErrorFile(jobContext);
             errorJobContexts.add(jobContext);
+        } finally {
+            MultiJobLogContext.setJobContext(null);
         }
         return false;
     }

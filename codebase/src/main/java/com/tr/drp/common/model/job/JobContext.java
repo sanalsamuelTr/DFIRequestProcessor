@@ -9,6 +9,4 @@ public class JobContext {
     private JobType jobType;
     private String jobId;
     private String domain;
-
-
 }

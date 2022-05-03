@@ -1,5 +1,6 @@
 package com.tr.drp.service.file;
 
+import com.tr.drp.Main;
 import com.tr.drp.common.model.DFIRequest;
 import com.tr.drp.common.model.job.JobContext;
 
@@ -30,4 +31,11 @@ public interface LocalFilesService {
     void writeDFIOutPart(DFIRequest request, byte[] zip);
 
     void collectDFIOutCSVs(List<DFIRequest> requests);
+
+    static Path getJobContextPath(JobContext jobContext) {
+        LocalFilesService filesService = Main.getApplicationContext().getBean(LocalFilesService.class);
+       return filesService.getJobOutPath(jobContext);
+    }
+
+    Path getJobOutPath(JobContext jobContext);
 }

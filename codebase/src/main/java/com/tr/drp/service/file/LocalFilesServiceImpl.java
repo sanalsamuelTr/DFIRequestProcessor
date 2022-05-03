@@ -294,6 +294,12 @@ public class LocalFilesServiceImpl implements LocalFilesService {
         return outPath;
     }
 
+    @Override
+    public Path getJobOutPath(JobContext jobContext) {
+        Path outPath = Paths.get(outputBasePath, jobContext.getDomain(), jobContext.getJobId());
+        return outPath;
+    }
+
     private void createFile(Path file) {
         try {
             Files.createDirectories(file.getParent());

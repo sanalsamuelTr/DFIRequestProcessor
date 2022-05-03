@@ -1,15 +1,10 @@
 package com.tr.drp.common.utils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
 
 public class CollectionsUtils {
-    public <T> List<List<T>> group(List<T> list, int maxCount) {
-        if (list == null) {
-            return null;
-        }
-        List<List<T>> res = new ArrayList<>();
-        int batchCount = list.size() / maxCount + 1;
-        return res;
+    public static <T> Collection<T> safe(Collection<T> c) {
+        return c == null ? Collections.EMPTY_LIST : c;
     }
 }

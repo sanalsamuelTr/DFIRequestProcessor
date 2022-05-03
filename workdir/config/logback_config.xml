@@ -31,15 +31,24 @@
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
+    <appender name="jobAppender"
+              class="com.tr.drp.common.log.MultiJobFileAppender">
+        <encoder
+                class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss} %p %C{1} [%t] %m%n</Pattern>
+        </encoder>
+        <filePath>job.log</filePath>
+    </appender>
 
     <!-- LOG everything at INFO level -->
     <root level="info">
         <appender-ref ref="RollingFile" />
         <appender-ref ref="Console" />
+        <appender-ref ref="jobAppender" />
     </root>
 
-    <!-- LOG "com.thomsonreuters.maf*" at TRACE level -->
-    <logger name="com.thomsonreuters.maf" level="info" additivity="false">
+    <!-- LOG "com.thomsonreuters.drp" at TRACE level -->
+    <logger name="com.thomsonreuters.drp" level="info" additivity="false">
         <appender-ref ref="RollingFile" />
         <appender-ref ref="Console" />
     </logger>

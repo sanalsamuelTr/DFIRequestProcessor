@@ -11,12 +11,12 @@ spring:
 
 
 app:
-  db-cron: 0 * * * * ?
   file-trigger:
     check-period-sec: 30
-  domain:
+  domains:
     -
       name: alj
+      dbCron: 0 * * * * ?
   maxCSVContentLines: 1000
   jobid-pattern: yyyyMMddHHmmssSSS
   sftp:
