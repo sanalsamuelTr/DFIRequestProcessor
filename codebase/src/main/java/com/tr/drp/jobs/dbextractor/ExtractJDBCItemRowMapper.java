@@ -1,5 +1,6 @@
 package com.tr.drp.jobs.dbextractor;
 
+import com.opencsv.CSVParser;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
@@ -19,6 +20,7 @@ public class ExtractJDBCItemRowMapper implements RowMapper<Map<String, String>> 
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("MMddyyyy");
 
     private static final int COUNTER_START_VALUE = 1;
+    private static final ExtCSVParser csvParser = new ExtCSVParser();
 
     /**
      * {@inheritDoc}
@@ -37,7 +39,7 @@ public class ExtractJDBCItemRowMapper implements RowMapper<Map<String, String>> 
             if (value != null) {
                 sValue = value.toString();
                 if (value instanceof String) {
-                    sValue = '"'+sValue+'"';
+                    sValue = csvParser.convertToCsvString(sValue);
                 }
                 if (value instanceof Date) {
                     sValue = dateFormat.format(value);
@@ -47,5 +49,11 @@ public class ExtractJDBCItemRowMapper implements RowMapper<Map<String, String>> 
             details.put(coulmnName, sValue);
         }
         return details;
+    }
+
+    private static class ExtCSVParser extends CSVParser {
+        public String convertToCsvString(String value) {
+            return convertToCsvValue(value, true);
+        }
     }
 }
