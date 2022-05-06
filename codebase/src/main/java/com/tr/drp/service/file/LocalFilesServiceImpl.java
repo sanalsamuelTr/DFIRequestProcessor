@@ -42,8 +42,6 @@ public class LocalFilesServiceImpl implements LocalFilesService {
     private String outputBasePath;
     @Value("${app.path.job}")
     private String jobTriggerPath;
-    @Value("${app.maxCSVContentLines}")
-    private int maxCSVContentLines;
     @Value("${app.path.domain.job.dfi-out}")
     private String dfiOutPath;
     @Value("${app.path.domain.job.dfi-in}")

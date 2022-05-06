@@ -7,6 +7,7 @@ import com.tr.drp.jobs.JobRunner;
 import com.tr.drp.service.dfi.DFIService;
 import com.tr.drp.service.file.LocalFilesService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
@@ -21,9 +22,12 @@ public class DFIOutboundJobRunner implements JobRunner {
     @Autowired
     private DFIService dfiService;
 
+    @Value("${app.maxCSVContentLines}")
+    private int maxCSVContentLines;
+
     @Override
     public boolean run(JobContext jobContext) {
-        List<Path> parts = localFilesService.splitToDFIOutCSV(jobContext, 100);
+        List<Path> parts = localFilesService.splitToDFIOutCSV(jobContext, maxCSVContentLines);
         int p = 0;
         for (Path partPath : parts) {
             p++;
