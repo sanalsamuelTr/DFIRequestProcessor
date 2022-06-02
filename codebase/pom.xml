@@ -5,7 +5,7 @@
 
 	<groupId>com.tr.dfirp</groupId>
 	<artifactId>dfi-request-processor</artifactId>
-	<version>0.0.2</version>
+	<version>0.0.4</version>
 	<packaging>jar</packaging>
 	<name>DFI Request Processor</name>
 	<description>DFI Request Processor</description>
