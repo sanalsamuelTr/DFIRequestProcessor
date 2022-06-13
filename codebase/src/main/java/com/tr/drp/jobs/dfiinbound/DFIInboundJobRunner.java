@@ -3,21 +3,15 @@ package com.tr.drp.jobs.dfiinbound;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.tr.drp.common.model.DFIRequest;
 import com.tr.drp.common.model.job.JobContext;
-import com.tr.drp.config.SFTPProperties;
 import com.tr.drp.jobs.JobRunner;
+import com.tr.drp.service.dfi.DFIService;
 import com.tr.drp.service.file.LocalFilesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.integration.file.remote.RemoteFileTemplate;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -25,13 +19,10 @@ public class DFIInboundJobRunner implements JobRunner {
     private static final Logger log = LoggerFactory.getLogger(DFIInboundJobRunner.class);
 
     @Autowired
-    RemoteFileTemplate<LsEntry> remoteFileTemplate;
-
-    @Autowired
     LocalFilesService localFilesService;
 
     @Autowired
-    SFTPProperties sftpProperties;
+    DFIService dfiService;
 
     @Override
     public boolean run(JobContext jobContext) {
@@ -60,8 +51,7 @@ public class DFIInboundJobRunner implements JobRunner {
             return false;
         }
 
-        LsEntry[] files = remoteFileTemplate.list(sftpProperties.getRemoteInboundDirectory());
-        Set<String> fileNames = Arrays.stream(files).map(f -> f.getFilename()).collect(Collectors.toSet());
+        Collection<String> fileNames = dfiService.listOutDir();
         List<DFIRequest> responsesAlreadyInDFI = requestWithoutResponse.stream()
                 .filter(r -> fileNames.contains(r.getDfiRequestId() + ".end"))
                 .filter(r -> fileNames.contains(r.getDfiRequestId() + ".out.csv.zip"))
@@ -74,15 +64,13 @@ public class DFIInboundJobRunner implements JobRunner {
 
     private void downloadAndUncompressFiles(List<DFIRequest> responsesAlreadyInDFI) {
         log.info("Downloading responses: {}", responsesAlreadyInDFI);
-        remoteFileTemplate.execute(session -> {
-            for (DFIRequest dfiRequest : responsesAlreadyInDFI) {
-                Path filePath = Paths.get(sftpProperties.getRemoteInboundDirectory(), dfiRequest.getDfiRequestId() + ".out.csv.zip");
-                String lnxFilePath = filePath.toString().replace("\\", "/");
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                session.read(lnxFilePath, baos);
-                localFilesService.writeDFIOutPart(dfiRequest, baos.toByteArray());
-            }
-            return null;
+        Map<String, DFIRequest> dataFileNameToRequest = responsesAlreadyInDFI.stream().collect(Collectors.toMap(
+                r -> r.getDfiRequestId() + ".out.csv.zip",
+                r -> r
+        ));
+        dfiService.readBatchFromOut(dataFileNameToRequest.keySet(), (path, data) -> {
+            DFIRequest request = dataFileNameToRequest.get(path);
+            localFilesService.writeDFIOutPart(request, data);
         });
     }
 }

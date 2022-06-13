@@ -19,6 +19,9 @@ app:
       dbCron: 0 * * * * ?
   maxCSVContentLines: 1000
   jobid-pattern: yyyyMMddHHmmssSSS
+  dfi-local:
+    outbound: C:\temp\abc\input
+    inbound: C:\temp\abc\output
   sftp:
     host: gcc-uat.hostedtax.thomsonreuters.com
     port: 2222

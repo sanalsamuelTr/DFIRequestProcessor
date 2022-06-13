@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.expression.common.LiteralExpression;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.IntegrationComponentScan;
@@ -35,6 +36,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Collections;
 
+@Profile("sftp")
 @Configuration
 @IntegrationComponentScan
 @EnableIntegration
