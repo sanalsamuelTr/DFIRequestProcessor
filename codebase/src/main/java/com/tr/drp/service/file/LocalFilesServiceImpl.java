@@ -238,7 +238,7 @@ public class LocalFilesServiceImpl implements LocalFilesService {
     }
 
     @Override
-    public void writeDFIOutPart(DFIRequest request, byte[] zip) {
+    public void writeDFIOutPartCompressed(DFIRequest request, byte[] zip) {
         Path zipPath = Paths.get(outputBasePath, request.getJobContext().getDomain(), request.getJobContext().getJobId(), dfiInPath,
                 request.getDfiRequestId() + ".zip");
         try {
@@ -261,6 +261,19 @@ public class LocalFilesServiceImpl implements LocalFilesService {
             throw new ProcessorException("Can't write unzipped: " + unzipPath);
         }
         request.setDfiResponse(DFIResponse.builder().responseFile(unzipPath).build());
+    }
+
+    @Override
+    public void writeDFIOutPart(DFIRequest request, byte[] data) {
+
+        Path dataPath = Paths.get(outputBasePath, request.getJobContext().getDomain(), request.getJobContext().getJobId(), dfiInPath,
+                "dfi_in_" + request.getPart() + ".csv");
+        try {
+            Files.write(dataPath, data);
+        } catch (IOException e) {
+            throw new ProcessorException("Can't write data: " + dataPath);
+        }
+        request.setDfiResponse(DFIResponse.builder().responseFile(dataPath).build());
     }
 
     @Override

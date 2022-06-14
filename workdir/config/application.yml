@@ -42,6 +42,7 @@ app:
   file:
     dfi-properties: properties.xml
     dfi-properties-map: map.properties
+  compressed: false
 
 encryptor:
   common:

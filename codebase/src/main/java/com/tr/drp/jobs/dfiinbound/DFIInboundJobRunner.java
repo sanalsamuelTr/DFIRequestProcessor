@@ -9,6 +9,7 @@ import com.tr.drp.service.file.LocalFilesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -20,6 +21,9 @@ public class DFIInboundJobRunner implements JobRunner {
 
     @Autowired
     LocalFilesService localFilesService;
+
+    @Value("${app.compressed:true}")
+    private boolean outCompressed;
 
     @Autowired
     DFIService dfiService;
@@ -54,7 +58,7 @@ public class DFIInboundJobRunner implements JobRunner {
         Collection<String> fileNames = dfiService.listOutDir();
         List<DFIRequest> responsesAlreadyInDFI = requestWithoutResponse.stream()
                 .filter(r -> fileNames.contains(r.getDfiRequestId() + ".end"))
-                .filter(r -> fileNames.contains(r.getDfiRequestId() + ".out.csv.zip"))
+                .filter(r -> fileNames.contains(r.getDfiRequestId() + ".out.csv" + (outCompressed ? ".zip" : "")))
                 .collect(Collectors.toList());
         if (!responsesAlreadyInDFI.isEmpty()) {
             downloadAndUncompressFiles(responsesAlreadyInDFI);
@@ -65,12 +69,16 @@ public class DFIInboundJobRunner implements JobRunner {
     private void downloadAndUncompressFiles(List<DFIRequest> responsesAlreadyInDFI) {
         log.info("Downloading responses: {}", responsesAlreadyInDFI);
         Map<String, DFIRequest> dataFileNameToRequest = responsesAlreadyInDFI.stream().collect(Collectors.toMap(
-                r -> r.getDfiRequestId() + ".out.csv.zip",
+                r -> r.getDfiRequestId() + ".out.csv" + (outCompressed ? ".zip" : ""),
                 r -> r
         ));
         dfiService.readBatchFromOut(dataFileNameToRequest.keySet(), (path, data) -> {
             DFIRequest request = dataFileNameToRequest.get(path);
-            localFilesService.writeDFIOutPart(request, data);
+            if (outCompressed) {
+                localFilesService.writeDFIOutPartCompressed(request, data);
+            } else {
+                localFilesService.writeDFIOutPart(request, data);
+            }
         });
     }
 }

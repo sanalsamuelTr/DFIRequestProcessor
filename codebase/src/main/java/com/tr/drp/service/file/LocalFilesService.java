@@ -28,6 +28,8 @@ public interface LocalFilesService {
 
     void createJobTriggerErrorFile(JobContext jobContext);
 
+    void writeDFIOutPartCompressed(DFIRequest request, byte[] zip);
+
     void writeDFIOutPart(DFIRequest request, byte[] zip);
 
     void collectDFIOutCSVs(List<DFIRequest> requests);
