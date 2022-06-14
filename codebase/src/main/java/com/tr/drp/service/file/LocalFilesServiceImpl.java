@@ -120,7 +120,7 @@ public class LocalFilesServiceImpl implements LocalFilesService {
             new ProcessorException("No content file: " + path);
         }
         try {
-            csvLines = Files.readAllLines(path);
+            csvLines = (List<String>)FileUtils.readLines(path.toFile());
         } catch (IOException e) {
             new ProcessorException("Can't read csv content: " + path, e);
         }
@@ -284,7 +284,7 @@ public class LocalFilesServiceImpl implements LocalFilesService {
         JobContext jobContext = requests.get(0).getJobContext();
         List<List<String>> contents = requests.stream().map(r -> {
             try {
-                return Files.readAllLines(r.getDfiResponse().getResponseFile());
+                return (List<String>)FileUtils.readLines(r.getDfiResponse().getResponseFile().toFile());
             } catch (IOException e) {
                 throw new ProcessorException("Can't read file: " + r.getDfiResponse().getResponseFile());
             }
